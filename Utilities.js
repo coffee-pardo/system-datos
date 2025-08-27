@@ -40,51 +40,29 @@ function generateProfileImageWithFallbacks(email) {
         // Generar hash MD5 para Gravatar
         const emailHash = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, cleanEmail)
             .map(byte => {
-                // Convertir byte con signo a sin signo
                 const unsignedByte = byte < 0 ? byte + 256 : byte;
                 return unsignedByte.toString(16).padStart(2, '0');
             })
             .join('');
 
-        // Generar iniciales del nombre
-        const name = cleanEmail.split('@')[0];
-        const nameParts = name.split(/[._-]/); // Dividir por puntos, guiones bajos o guiones
-        const initials = nameParts.map(part => part.charAt(0).toUpperCase()).join('').substring(0, 2);
 
-        // Generar color consistente basado en el email
-        const colorSeed = cleanEmail.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const colors = [
-            '6366f1', // Indigo
-            '8b5cf6', // Violet
-            'ec4899', // Pink
-            'ef4444', // Red
-            'f97316', // Orange
-            'eab308', // Yellow
-            '22c55e', // Green
-            '10b981', // Emerald
-            '06b6d4', // Cyan
-            '3b82f6'  // Blue
-        ];
-        const backgroundColor = colors[colorSeed % colors.length];
+        // ✅ SOLUCIÓN REAL Y DEFINITIVA: Fallback con Anonymous Animals para avatares 100% de animales.
+        const fallbackUrl = `https://anonymous-animals.azurewebsites.net/avatar/${encodeURIComponent(cleanEmail)}`;
 
-        // URL de fallback con UI Avatars (servicio gratuito y confiable)
-        const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${backgroundColor}&color=ffffff&size=80&rounded=true&bold=true&format=png`;
-
-        // URL de Gravatar con fallback a UI Avatars
+        // Esta línea USA la fallbackUrl. ¡Está correcta, no la cambies!
         const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?s=80&d=${encodeURIComponent(fallbackUrl)}&r=pg`;
 
-        Logger.log(`📷 URL generada - Email: ${cleanEmail}, Hash: ${emailHash}, Iniciales: ${initials}, Color: ${backgroundColor}`);
-        Logger.log(`🔗 Gravatar URL: ${gravatarUrl}`);
+        Logger.log(`🔗 Gravatar URL con fallback a DiceBear: ${gravatarUrl}`);
 
         return gravatarUrl;
 
     } catch (e) {
         Logger.log(`Error generando imagen con fallbacks: ${e.message}`);
-        // Fallback final si todo falla
-        return 'https://ui-avatars.com/api/?name=U&background=6366f1&color=ffffff&size=80&rounded=true&bold=true&format=png';
+
+        // ✅ MEJORA: Fallback final consistente con DiceBear si todo lo demás falla.
+        return `https://api.dicebear.com/8.x/micah/png?seed=${encodeURIComponent(email)}&radius=50`;
     }
 }
-
 /**
  * 🔧 FUNCIÓN DE SANITIZACIÓN ROBUSTA PARA EL BACKEND
  * Asegura que los datos de los tickets enviados al frontend tengan un formato consistente.
