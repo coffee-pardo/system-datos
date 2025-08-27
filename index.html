@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticket Pro - Gestión de Tickets</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <?!= include('styles'); ?>
+</head>
+
+<body>
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="sidebar-brand">
+                <i class="fas fa-ticket-alt"></i>
+                <div>
+                    <div>Sticket</div>
+                    <small style="font-size: 0.85rem; font-weight: 400; opacity: 0.9;">Pro</small>
+                </div>
+            </a>
+        </div>
+
+        <div class="sidebar-nav" id="sidebar-nav">
+            <a href="#" class="nav-link active" data-view="dashboard">
+                <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-link" data-view="tickets">
+                <i class="fas fa-clipboard-list"></i> <span>Tickets</span>
+            </a>
+            <a href="#" class="nav-link" data-view="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reportes</span>
+            </a>
+            <a href="#" class="nav-link" id="nav-auditoria" data-view="auditoria" style="display: none;">
+                <i class="fas fa-user-shield"></i>
+                <span>Auditoría</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="main-content" id="main-content">
+        <nav class="top-navbar">
+            <div class="navbar-content">
+                <button class="hamburger-btn" id="sidebarToggle" aria-label="Toggle Sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="search-input"
+                        placeholder="Buscar por ID, asunto, planilla o creador...">
+                </div>
+                <!-- NUEVO: Elemento para mostrar el superior del usuario -->
+                <div id="user-superior-display" class="me-auto ms-3 fw-bold text-muted">
+                    Equipo: Cargando...
+                </div>
+                <!-- TERMINA NUEVO: Elemento para mostrar el superior del usuario -->
+
+                <div class="user-menu">
+                    <div class="theme-switch">
+                        <i class="fas fa-sun" style="color: var(--text-muted);"></i>
+                        <label class="switch" aria-label="Toggle Dark Mode"> <input type="checkbox" id="darkModeSwitch">
+                            <span class="slider"></span>
+                        </label>
+                        <i class="fas fa-moon" style="color: var(--text-muted);"></i>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn btn-link dropdown-toggle" type="button" id="dropdownUser1"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <strong class="text-color">Usuario</strong>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#modalNuevoTicket"><i class="fas fa-plus-circle me-2"></i>Nuevo
+                                    Ticket</a> </li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                    data-bs-target="#modalMetricasUsuario"><i class="fas fa-chart-pie me-2"></i>Métricas
+                                    y Auditoría</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Cerrar
+                                    Sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content-area">
+            <div id="dashboard-view" class="view active">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0 fw-bold">Dashboard General</h1> <button class="btn btn-primary"
+                        data-bs-toggle="modal" data-bs-target="#modalNuevoTicket">
+                        <i class="fas fa-plus me-2"></i>Crear Ticket
+                    </button>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="stats-open">0</div>
+                        <div class="stat-label">Tickets Abiertos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="stats-pending">0</div>
+                        <div class="stat-label">Tickets en Progreso</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="stats-resolved">0</div>
+                        <div class="stat-label">Tickets Resueltos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="stats-urgent">0</div>
+                        <div class="stat-label">Tickets Urgentes</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid-extended">
+                    <div class="chart-container">
+                        <div class="chart-title">Tickets Creados (Últimas 24h)</div>
+                        <div id="realtime-metrics-chart"></div>
+                    </div>
+                    <div class="chart-container" id="motivo-escalamiento-counters">
+                        <div class="chart-title">Top 5 Motivos de Escalamiento</div>
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <p class="text-muted fst-italic">Cargando contadores...</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Distribución de Tickets por Estado</div>
+                        <div id="ticket-status-chart"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Actividad Diaria de Tickets</div>
+                        <div id="ticketsChart"></div>
+                    </div>
+                </div>
+
+
+                <div class="tickets-grid">
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h5 class="table-title mb-0">Últimos Tickets Registrados</h5> <button
+                                class="btn btn-outline-primary btn-sm" id="view-all-tickets-btn">
+                                Ver Todos <i class="fas fa-arrow-right ms-2"></i> </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Asunto</th>
+                                        <th>Planilla</th>
+                                        <th>Creado Por</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-tickets-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted fst-italic">Cargando tickets
+                                            recientes...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div id="notification-summary" class="mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-bell me-2"></i>Notificaciones Recientes</h6>
+                                </div>
+                                <div class="card-body d-flex align-items-center justify-content-center">
+                                    <p class="text-muted fst-italic">Cargando notificaciones...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="urgent-tickets-summary" class="mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Tickets con Prioridad Urgente
+                                    </h6>
+                                </div>
+                                <div class="card-body d-flex align-items-center justify-content-center">
+                                    <p class="text-muted fst-italic">Cargando tickets urgentes...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div id="tickets-view" class="view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0 fw-bold">Gestión Detallada de Tickets</h1>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-success" id="export-to-excel-btn" style="display: none;">
+                            <i class="fas fa-file-excel me-2"></i>Exportar a Excel
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoTicket">
+                            <i class="fas fa-plus-circle me-2"></i>Crear Nuevo Ticket
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filters-container">
+                    <h6 class="mb-3"><i class="fas fa-filter me-2"></i>Filtros Avanzados de Búsqueda</h6>
+                    <div class="filters-grid">
+                        <div>
+                            <label for="tickets-filter-status" class="form-label">Estado</label>
+                            <select class="form-select" id="tickets-filter-status">
+                                <option value="">Todos los estados</option>
+                                <option value="Registrado">Registrado</option>
+                                <option value="En Progreso">En Progreso</option>
+                                <option value="Resuelto">Resuelto</option>
+                                <option value="Cerrado">Cerrado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="tickets-filter-tool" class="form-label">Herramienta</label>
+                            <select class="form-select" id="tickets-filter-tool">
+                                <option value="">Todas las herramientas</option>
+                                <option value="MAIL">MAIL</option>
+                                <option value="ITICKETS">ITICKETS</option>
+                                <option value="ICD">ICD</option>
+                                <option value="ITRACKER">ITRACKER</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="tickets-filter-motivoEscalamiento" class="form-label">Motivo de
+                                Escalamiento</label>
+                            <select class="form-select" id="tickets-filter-motivoEscalamiento">
+                                <option value="">Todos los motivos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="tickets-filter-createdBy" class="form-label">Creado Por</label>
+                            <select class="form-select" id="tickets-filter-createdBy">
+                                <option value="">Todos los usuarios</option>
+                            </select>
+                        </div>
+                        <!-- EMPIEZA NUEVO: Filtro por Equipo -->
+                        <div>
+                            <label for="tickets-filter-equipo" class="form-label">Equipo (Superior)</label>
+                            <select class="form-select" id="tickets-filter-equipo">
+                                <option value="">Todos los equipos</option>
+                            </select>
+                        </div>
+                        <!-- TERMINA NUEVO: Filtro por Equipo -->
+                        <div>
+                            <label for="tickets-filter-priority" class="form-label">Prioridad</label>
+                            <select class="form-select" id="tickets-filter-priority">
+                                <option value="">Todas las prioridades</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Urgente">Urgente</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="tickets-filter-startDate" class="form-label">Fecha de Creación Desde</label>
+                            <input type="date" class="form-control" id="tickets-filter-startDate">
+                        </div>
+                        <div>
+                            <label for="tickets-filter-endDate" class="form-label">Fecha de Creación Hasta</label>
+                            <input type="date" class="form-control" id="tickets-filter-endDate">
+                        </div>
+                        <div>
+                            <label class="form-label">&nbsp;</label> <button class="btn btn-outline-secondary w-100"
+                                id="tickets-clear-filters-btn">
+                                <i class="fas fa-eraser me-2"></i>Limpiar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <h5 class="table-title mb-0">Listado Completo de Tickets</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID Ticket</th>
+                                    <th>Asunto</th>
+                                    <th>Planilla Cliente</th>
+                                    <th>Creado Por</th>
+                                    <th>Estado</th>
+                                    <th>Prioridad</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Herramienta</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-tickets-table-body">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted fst-italic">Cargando tickets...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-center mt-4 mb-3">
+                        <nav aria-label="Paginación de Tickets">
+                            <ul class="pagination" id="tickets-pagination">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" data-page="prev" aria-label="Anterior">Anterior</a>
+                                </li>
+                                <li class="page-item active">
+                                    <a class="page-link" href="#" data-page="1" aria-label="Página 1">1</a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" data-page="next" aria-label="Siguiente">Siguiente</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reports-view" class="view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0 fw-bold">Reportes y Analíticas Avanzadas</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalReporte">
+                        <i class="fas fa-chart-area me-2"></i>Generar Reporte Personalizado
+                    </button>
+                </div>
+
+                <div class="row mb-4 g-4">
+                    <div class="col-lg-6">
+                        <div id="reports-urgent-tickets-summary">
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div id="reports-motivo-escalamiento-counters">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid-extended">
+                    <div class="chart-container">
+                        <div class="chart-title">Tendencia de Creación y Resolución de Tickets</div>
+                        <div id="reportsChart1"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Tickets por Herramienta</div>
+                        <div id="reportsChart3"></div>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Esta sección está en constante evolución. Próximamente, podrás generar reportes personalizados y
+                    exportarlos.
+                </div>
+            </div>
+
+            <div id="auditoria-view" class="view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0 fw-bold">Panel de Auditoría y Gestión Rápida</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalMetricasUsuario">
+                        <i class="fas fa-users-cog me-2"></i>Acceder a Gestión Rápida
+                    </button>
+                </div>
+
+                <div class="alert alert-warning shadow-sm">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    **Acceso Restringido:** Este panel está disponible exclusivamente para usuarios con roles de
+                    **Auditor** y
+                    **Superusuario**. Aquí se encuentran herramientas avanzadas para la supervisión y gestión eficiente
+                    de
+                    tickets.
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Resumen de Métricas Clave</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Accede a estadísticas detalladas sobre la creación y resolución de
+                                    tickets por
+                                    usuario, identificando patrones y áreas de mejora en el rendimiento del equipo.</p>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item"><i
+                                            class="fas fa-check-circle text-success me-2"></i>Tickets Resueltos por
+                                        Agente</li>
+                                    <li class="list-group-item"><i
+                                            class="fas fa-hourglass-half text-warning me-2"></i>Tickets en Progreso
+                                        por Agente</li>
+                                    <li class="list-group-item"><i class="fas fa-chart-line text-info me-2"></i>Tasa de
+                                        Resolución General
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Gestión Directa de Tickets</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Modifica rápidamente el estado, la prioridad y las observaciones de
+                                    los tickets
+                                    directamente desde una interfaz optimizada para la eficiencia.</p>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item"><i class="fas fa-edit text-primary me-2"></i>Edición
+                                        Rápida de Estado y
+                                        Prioridad</li>
+                                    <li class="list-group-item"><i class="fas fa-comment-dots text-info me-2"></i>Añadir
+                                        Observaciones de
+                                        Auditoría</li>
+                                    <li class="list-group-item"><i
+                                            class="fas fa-user-tag text-success me-2"></i>Asignación de Tickets a
+                                        Auditores</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal fade" id="modalNuevoTicket" tabindex="-1" aria-labelledby="modalNuevoTicketLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNuevoTicketLabel"><i class="fas fa-plus-circle me-2"></i>Crear
+                        Nuevo Ticket
+                        de Escalamiento Segundo Nivel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="alertPlaceholderTicket"></div>
+                    <form id="escalamientoForm" novalidate>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="usuario" class="form-label">Usuario (U) <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="usuario" name="usuario" required
+                                    placeholder="Ej: u111111">
+                                <div class="invalid-feedback">Por favor, ingresa el Usuario (U).</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="casoYoizen" class="form-label">Número de Caso Yoizen <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="casoYoizen" name="casoYoizen" required
+                                    placeholder="Ej: 12345678">
+                                <div class="invalid-feedback">Por favor, ingresa el Número de Caso Yoizen.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="herramienta" class="form-label">Herramienta <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" id="herramienta" name="herramienta" required>
+                                    <option value="">Seleccionar herramienta</option>
+                                    <option value="MAIL">MAIL</option>
+                                    <option value="ITICKETS">ITICKETS</option>
+                                    <option value="ICD">ICD</option>
+                                    <option value="ITRACKER">ITRACKER</option>
+                                </select>
+                                <div class="invalid-feedback">Por favor, selecciona una herramienta.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="idDerivacion" class="form-label">ID Derivación FAN <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="idDerivacion" name="idDerivacion" required
+                                    placeholder="Ej: 123456789">
+                                <div class="invalid-feedback">Por favor, ingresa el ID Derivación FAN.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="motivoEscalamiento" class="form-label">Motivo de Escalamiento <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="motivoEscalamiento"
+                                    name="motivoEscalamiento" required
+                                    placeholder="Ej: Falla: // Falla: Señal en vivo Flow APP"
+                                    list="motivoEscalamientoOptions">
+                                <datalist id="motivoEscalamientoOptions"></datalist>
+                                <div class="invalid-feedback">Por favor, ingresa el Motivo de Escalamiento.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="numeroTicket" class="form-label">N° Ticket Escalamiento (Opcional)</label>
+                                <input type="text" class="form-control" id="numeroTicket" name="numeroTicket"
+                                    placeholder="Si aplica, el número de ticket externo">
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="rutaOperativa" class="form-label">Ruta Operativa Asociada</label>
+                                <textarea class="form-control" id="rutaOperativa" name="rutaOperativa" rows="5" readonly
+                                    placeholder="La ruta operativa asociada al motivo de escalamiento aparecerá aquí automáticamente."
+                                    style="background-color: var(--bg-color); cursor: default;"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="planilla" class="form-label">Planilla de Escalamiento <span
+                                        class="text-danger">*</span></label>
+                                <textarea class="form-control" id="planilla" name="planilla" rows="15" required
+                                    placeholder="La planilla aparecerá de forma automática"></textarea>
+                                <div class="invalid-feedback">Por favor, ingresa la Planilla de Escalamiento de forma
+                                    manual.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="capturaFile" class="form-label">Archivo Adjunto (Opcional)</label>
+                                <input type="file" class="form-control" id="capturaFile" name="capturaFile"
+                                    accept=".jpg,.jpeg,.png,.pdf,.xlsx,.docx">
+                                <div class="form-text text-muted">Formatos permitidos: JPG, PNG, PDF, Excel, Word (Max
+                                    5MB)</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="escalamientoForm" class="btn btn-primary" id="submitTicketButton">
+                        <span class="spinner-border spinner-border-sm d-none me-2" role="status"
+                            aria-hidden="true"></span>
+                        <span class="button-text"><i class="fas fa-paper-plane me-2"></i>Enviar Ticket</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDetalleTicket" tabindex="-1" aria-labelledby="modalDetalleTicketLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDetalleTicketLabel">
+                        <i class="fas fa-info-circle me-2"></i>Detalles del Ticket <span id="detalle-ticket-id"
+                            class="fw-bold text-primary">#</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 text-primary"><i class="fas fa-clipboard-list me-2"></i>Información
+                                        General del Ticket
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">Asunto del
+                                                Escalamiento:</label>
+                                            <p id="detalle-pedido" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">Planilla Cliente:</label>
+                                            <p id="detalle-planilla" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">Creado Por:</label>
+                                            <p id="detalle-creadoPor" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">Fecha de Creación:</label>
+                                            <p id="detalle-timestamp" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">Estado Actual:</label>
+                                            <p id="detalle-estado" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">Herramienta Utilizada:</label>
+                                            <p id="detalle-herramienta" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">N° Caso Yoizen:</label>
+                                            <p id="detalle-casoYoizen" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">ID Derivación FAN:</label>
+                                            <p id="detalle-idDerivacion" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">N° Ticket Escalamiento
+                                                (Externo):</label>
+                                            <p id="detalle-numeroTicket" class="mb-0 text-color"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted">Archivo Adjunto:</label>
+                                            <div id="detalle-adjunto-container"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card shadow-sm mb-3">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 text-info"><i class="fas fa-user-tag me-2"></i>Auditor Asignado</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p id="detalle-tomadoPor" class="mb-2 text-muted fst-italic">No tomado por un
+                                        auditor.</p>
+                                    <button class="btn btn-sm btn-info w-100" id="take-ticket-btn"
+                                        style="display: none;">
+                                        <span class="spinner-border spinner-border-sm d-none me-2" role="status"
+                                            aria-hidden="true"></span>
+                                        <span class="button-text">Tomar Ticket</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card shadow-sm mb-3" id="detalle-prioridad-container">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 text-warning"><i class="fas fa-flag me-2"></i>Prioridad del Ticket
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <select class="form-select mb-2" id="detalle-prioridad">
+                                        <option value="Normal">Normal</option>
+                                        <option value="Urgente">Urgente</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary w-100" id="save-prioridad-btn"
+                                        style="display: none;">
+                                        <i class="fas fa-save me-2"></i>Actualizar Prioridad
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card shadow-sm" id="detalle-observaciones-auditor-container">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 text-success"><i class="fas fa-comment-dots me-2"></i>Observaciones
+                                        del Auditor</h6>
+                                </div>
+                                <div class="card-body">
+                                    <textarea class="form-control mb-2" id="detalle-observaciones-auditor" rows="4"
+                                        placeholder="Agregar observaciones o notas importantes..."></textarea>
+                                    <button class="btn btn-sm btn-success w-100" id="save-observaciones-btn"
+                                        style="display: none;">
+                                        <i class="fas fa-check me-2"></i>Guardar Observaciones
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <ul class="nav nav-tabs nav-justified" id="ticketDetailTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="comments-tab" data-bs-toggle="tab"
+                                    data-bs-target="#comments" type="button" role="tab" aria-controls="comments"
+                                    aria-selected="true">
+                                    <i class="fas fa-comments me-2"></i>Comentarios
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history"
+                                    type="button" role="tab" aria-controls="history" aria-selected="false">
+                                    <i class="fas fa-history me-2"></i>Historial de Cambios
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-3 border border-top-0 rounded-bottom bg-light"
+                            id="ticketDetailTabsContent">
+                            <div class="tab-pane fade show active" id="comments" role="tabpanel"
+                                aria-labelledby="comments-tab">
+                                <div class="card border-0">
+                                    <div class="card-body">
+                                        <div id="alertPlaceholderComments"></div>
+
+                                        <div id="ticket-comments-list" class="mb-3"
+                                            style="max-height: 300px; overflow-y: auto;">
+                                            <div class="text-center text-muted fst-italic">Cargando comentarios...</div>
+                                        </div>
+
+                                        <div class="border-top pt-3 mt-3">
+                                            <h6><i class="fas fa-plus-square me-2"></i>Agregar Nuevo Comentario</h6>
+                                            <div class="input-group">
+                                                <textarea class="form-control" id="new-comment-text" rows="2"
+                                                    placeholder="Escribe tu comentario aquí..."></textarea>
+                                                <button class="btn btn-primary" type="button" id="submitCommentButton">
+                                                    <span class="spinner-border spinner-border-sm d-none me-2"
+                                                        role="status" aria-hidden="true"></span>
+                                                    <span class="button-text">Enviar</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+                                <div class="card border-0">
+                                    <div class="card-body">
+                                        <div id="ticket-history-list" style="max-height: 400px; overflow-y: auto;">
+                                            <div class="text-center text-muted fst-italic">Cargando historial...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalMetricasUsuario" tabindex="-1" aria-labelledby="modalMetricasUsuarioLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMetricasUsuarioLabel"><i class="fas fa-chart-line me-2"></i>Panel
+                        de Gestión
+                        y Métricas de Auditoría</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-users me-2"></i>Rendimiento por Agente</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Agente</th>
+                                                    <th>Total</th>
+                                                    <th>Resueltos</th>
+                                                    <th>En Progreso</th>
+                                                    <th>Registrados</th>
+                                                    <th>Tasa Resolución</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="user-metrics-table-body">
+                                                <tr>
+                                                    <td colspan="6" class="text-center text-muted fst-italic">Cargando
+                                                        métricas de usuario...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-cogs me-2"></i>Gestión Rápida de Tickets Activos
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3 mb-3 align-items-end">
+                                        <div class="col-md-4">
+                                            <label for="quick-manage-filter-status" class="form-label">Filtrar por
+                                                Estado</label>
+                                            <select class="form-select form-select-sm" id="quick-manage-filter-status">
+                                                <option value="">Todos los estados</option>
+                                                <option value="Registrado">Registrado</option>
+                                                <option value="En Progreso">En Progreso</option>
+                                                <option value="Resuelto">Resuelto</option>
+                                                <option value="Cerrado">Cerrado</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="quick-manage-filter-priority" class="form-label">Filtrar por
+                                                Prioridad</label>
+                                            <select class="form-select form-select-sm"
+                                                id="quick-manage-filter-priority">
+                                                <option value="">Todas las prioridades</option>
+                                                <option value="Normal">Normal</option>
+                                                <option value="Urgente">Urgente</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button class="btn btn-outline-secondary btn-sm w-100"
+                                                id="quick-manage-clear-filters-btn">
+                                                <i class="fas fa-eraser me-1"></i>Limpiar Filtros
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive"
+                                        style="max-height: calc(100vh - 300px); overflow-y: auto;">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Asunto</th>
+                                                    <th>Planilla</th>
+                                                    <th>Creado Por</th>
+                                                    <th>Estado</th>
+                                                    <th>Prioridad</th>
+                                                    <th>Observaciones</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="quick-manage-tickets-table-body">
+                                                <tr>
+                                                    <td colspan="8" class="text-center text-muted fst-italic">Cargando
+                                                        tickets para gestión...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="d-flex justify-content-center mt-3">
+                                        <nav aria-label="Paginación de Gestión Rápida">
+                                            <ul class="pagination pagination-sm" id="quick-manage-pagination">
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" href="#" data-page="prev"
+                                                        aria-label="Anterior">Anterior</a>
+                                                </li>
+                                                <li class="page-item active">
+                                                    <a class="page-link" href="#" data-page="1"
+                                                        aria-label="Página 1">1</a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" href="#" data-page="next"
+                                                        aria-label="Siguiente">Siguiente</a>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalReporte" tabindex="-1" aria-labelledby="modalReporteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalReporteLabel"><i class="fas fa-chart-line me-2"></i>Generar Reporte
+                        Personalizado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Esta funcionalidad de reportes avanzados está actualmente en desarrollo.
+                        ¡Pronto podrás
+                        generar informes detallados con opciones personalizadas!</p>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-code me-2"></i>
+                        **Nota para desarrolladores:** Aquí se integrará la lógica para seleccionar rangos de fechas,
+                        tipos de
+                        gráficos y exportación de datos específicos para reportes.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalExportTickets" tabindex="-1" aria-labelledby="modalExportTicketsLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalExportTicketsLabel"><i class="fas fa-file-excel me-2"></i>Exportar
+                        Tickets a
+                        Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="export-columns" class="form-label">Seleccionar Columnas a Exportar:</label>
+                            <select class="form-select" id="export-columns" multiple size="8"
+                                aria-label="Columnas para exportar">
+                            </select>
+                            <div class="form-text text-muted">Mantén presionado **Ctrl** (o **Cmd** en Mac) para
+                                seleccionar múltiples
+                                columnas.</div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="export-start-date" class="form-label">Fecha de Creación Desde
+                                    (Opcional):</label>
+                                <input type="date" class="form-control" id="export-start-date">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="export-end-date" class="form-label">Fecha de Creación Hasta
+                                    (Opcional):</label>
+                                <input type="date" class="form-control" id="export-end-date">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="export-excel-btn">
+                        <i class="fas fa-download me-2"></i>Exportar Datos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -->
+    <div id="right-side-panel" class="side-panel">
+        <div class="side-panel-header">
+            <span><i class="fas fa-robot me-2"></i>Sticket Pro Assistant</span>
+            <button class="btn-close btn-close-white" id="close-side-panel" aria-label="Cerrar"></button>
+        </div>
+        <div class="side-panel-body" id="chat-container">
+            <div id="chat-history">
+                <div class="chat-message bot">
+                    <p>¡Hola! Soy tu asistente de IA. Puedo ayudarte a buscar tickets o a consultar procedimientos. ¿En
+                        qué te
+                        puedo ayudar?</p>
+                </div>
+            </div>
+            <div id="chat-input-container">
+                <textarea id="chat-input" placeholder="Escribe tu pregunta aquí..." rows="2"></textarea>
+                <button id="chat-send-btn" class="btn btn-primary" aria-label="Enviar mensaje">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- TERMINA IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -->
+    <div id="side-panel-overlay" class="side-panel-overlay"></div>
+
+    <div class="fab-main-container">
+        <div class="fab-container" id="tools-fab-container">
+            <div class="fab-options">
+                <a href="https://teco.sccd.ibmserviceengage.com/maximo_ICD/ui/?event=loadapp&value=startcntr&uisessionid=4754&_tt=vcgvioibic4hfa6aok8cd1fnmg"
+                    class="fab-option" target="_blank" data-bs-toggle="tooltip" data-bs-placement="left" title="ICD">
+                    <i class="fas fa-desktop"></i>
+                </a>
+                <a href="https://telecomarg-dwp.onbmc.com/dwp/app/#/page/nbzz5q88" class="fab-option" target="_blank"
+                    data-bs-toggle="tooltip" data-bs-placement="left" title="ITICKETS">
+                    <i class="fas fa-ticket-alt"></i>
+                </a>
+                <a href="https://itracker.telecom.com.ar/?L=login&m=notlogged&R=%2F" class="fab-option" target="_blank"
+                    data-bs-toggle="tooltip" data-bs-placement="left" title="ITRACKER">
+                    <i class="fas fa-tasks"></i>
+                </a>
+                <a href="https://consultaitracker/" class="fab-option" target="_blank" data-bs-toggle="tooltip"
+                    data-bs-placement="left" title="Consulta ITRACKER">
+                    <i class="fas fa-search"></i>
+                </a>
+            </div>
+            <button id="toolsFabButton" class="fab-btn tools-fab" aria-label="Herramientas">
+                <i class="fas fa-tools"></i>
+            </button>
+        </div>
+
+        <button id="fabButton" class="fab-btn">
+            <img id="fabIcon" src="https://img.icons8.com/?size=100&id=GLNXrevIGCZO&format=png&color=000000" alt="bot"
+                onerror="this.style.display='none'; document.getElementById('fabFallback').style.display='block';" />
+            <i id="fabFallback" class="fa-solid fa-robot" style="display:none;"></i>
+        </button>
+    </div>
+
+    <div id="global-alert-placeholder" class="position-fixed top-0 start-50 translate-middle-x mt-4"
+        style="z-index: 10000; width: 90%; max-width: 550px;"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <?!= include('state.html'); ?>
+    <?!= include('loadingManager.html'); ?>
+    <?!= include('api.html'); ?>
+    <?!= include('router.html'); ?>
+    <?!= include('ui.html'); ?>
+    <?!= include('handlers.html'); ?>
+    <?!= include('app.html'); ?>
+</body>
+
+</html>

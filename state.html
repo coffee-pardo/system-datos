@@ -1,0 +1,54 @@
+<script>
+    // ===============================================================
+    // 1. ESTADO GLOBAL DE LA APLICACIÓN (SINGLE SOURCE OF TRUTH)
+    // ===============================================================
+    /**
+     * @description Objeto 'state' que actúa como la "única fuente de verdad" para la aplicación.
+     * Centralizar el estado en un solo lugar hace que el flujo de datos sea predecible
+     * y más fácil de depurar. Todos los componentes leen de este estado para renderizarse.
+     */
+    let state = {
+        userProfile: { email: null, role: null },
+        tickets: [],
+        allTicketsForStats: [],
+        allPlanillas: [],   //  RENOMBRADO: Antes allClients, ahora allPlanillas
+        allCreators: [],
+        allSuperiores: [], // 🆕 NUEVO: Array de superiores
+        comments: {}, // Nuevo: Almacena comentarios por ticketId
+        notifications: [], // Nuevo: Almacena notificaciones
+        currentView: 'dashboard',
+        isDarkMode: () => document.body.classList.contains('dark-mode'),
+        pagination: {
+            currentPage: 1,
+            pageSize: 10,
+            totalTickets: 0,
+            totalPages: 0
+        },
+        filters: {
+            searchQuery: '',
+            status: '',
+            tool: '',
+            motivoEscalamiento: '', //  RENOMBRADO: Antes client, ahora motivoEscalamiento
+            createdBy: '',
+            equipo: '', // 🆕 NUEVO: Filtro por equipo
+            startDate: '',
+            endDate: '',
+            priority: ''
+        },
+        quickManagePagination: {
+            currentPage: 1,
+            pageSize: 10,
+            totalTickets: 0,
+            totalPages: 0
+        },
+        quickManageFilters: {
+            status: '',
+            priority: ''
+        },
+        sort: {
+            column: 'Timestamp',
+            direction: 'desc'
+        },
+        motivosOperativos: [] //  NUEVO: Almacena los motivos operativos para el datalist
+    };
+</script>

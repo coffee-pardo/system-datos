@@ -1,0 +1,54 @@
+<script>
+    // ===============================================================
+    // 4. ROUTER (Gestión de Vistas)
+    // ===============================================================
+
+    /**
+     * @description El objeto 'Router' maneja la lógica de navegación de la Single-Page Application (SPA).
+     */
+    const Router = {
+        showView(viewId) {
+            console.log('🔄 Cambiando a vista:', viewId);
+            state.currentView = viewId;
+
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active');
+                view.style.display = 'none';
+            });
+
+            const activeView = document.getElementById(`${viewId}-view`);
+            if (activeView) {
+                activeView.classList.add('active');
+                activeView.style.display = 'block';
+                console.log('✅ Vista activada:', viewId);
+            } else {
+                console.error('❌ No se encontró la vista:', viewId);
+            }
+
+            document.querySelectorAll('#sidebar-nav .nav-link').forEach(link => {
+                if (link.dataset.view) {
+                    link.classList.toggle('active', link.dataset.view === viewId);
+                }
+            });
+
+            if (window.innerWidth <= 992) {
+                UI.toggleSidebar(false);
+            }
+
+            switch (viewId) {
+                case 'dashboard':
+                    UI.renderDashboard(state.tickets);
+                    break;
+                case 'tickets':
+                    UI.renderTicketsPage(state.tickets);
+                    break;
+                case 'reports':
+                    UI.renderReportsPage(state.allTicketsForStats);
+                    // ✅ [MODIFICADO] Llamar a los renders de las nuevas tarjetas de resumen
+                    UI.renderUrgentTicketsSummary('reports-urgent-tickets-summary');
+                    UI.renderMotivoEscalamientoCounters('reports-motivo-escalamiento-counters');
+                    break;
+            }
+        }
+    };
+</script>
