@@ -17,6 +17,8 @@
 <body>
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>
+        <p class="loading-text"> Un momento por favor...</p> <!-- FIX PARA SPINNER -->
+    </div>
     </div>
 
     <nav class="sidebar" id="sidebar">
@@ -60,43 +62,49 @@
                     <input type="text" class="search-input" id="search-input"
                         placeholder="Buscar por ID, asunto, planilla o creador...">
                 </div>
-                <!-- NUEVO: Elemento para mostrar el superior del usuario -->
-                <div id="user-superior-display" class="me-auto ms-3 fw-bold text-muted">
-                    Equipo: Cargando...
-                </div>
-                <!-- TERMINA NUEVO: Elemento para mostrar el superior del usuario -->
-
-                <div class="user-menu">
-                    <div class="theme-switch">
-                        <i class="fas fa-sun" style="color: var(--text-muted);"></i>
-                        <label class="switch" aria-label="Toggle Dark Mode"> <input type="checkbox" id="darkModeSwitch">
-                            <span class="slider"></span>
-                        </label>
-                        <i class="fas fa-moon" style="color: var(--text-muted);"></i>
+                <div class="navbar-right-section">
+                    <!-- FIX PARA POSICIONAR BIEN EL NAV-->
+                    <!-- NUEVO: Elemento para mostrar el superior del usuario -->
+                    <div id="user-superior-display" class="fw-bold text-muted">
+                        EQUIPO: Estamos Cargando...
                     </div>
+                    <!-- TERMINA NUEVO: Elemento para mostrar el superior del usuario -->
 
-                    <div class="dropdown">
-                        <button class="btn btn-link dropdown-toggle" type="button" id="dropdownUser1"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-2"></i>
-                            <strong class="text-color">Usuario</strong>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#modalNuevoTicket"><i class="fas fa-plus-circle me-2"></i>Nuevo
-                                    Ticket</a> </li>
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#modalMetricasUsuario"><i class="fas fa-chart-pie me-2"></i>Métricas
-                                    y Auditoría</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Cerrar
-                                    Sesión</a></li>
-                        </ul>
+                    <div class="user-menu">
+                        <div class="theme-switch">
+                            <i class="fas fa-sun" style="color: var(--text-muted);"></i>
+                            <label class="switch" aria-label="Toggle Dark Mode"> <input type="checkbox"
+                                    id="darkModeSwitch">
+                                <span class="slider"></span>
+                            </label>
+                            <i class="fas fa-moon" style="color: var(--text-muted);"></i>
+                        </div>
+
+                        <div class="dropdown">
+                            <button class="btn btn-link dropdown-toggle" type="button" id="dropdownUser1"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-2"></i>
+                                <strong class="text-color">Usuario</strong>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                        data-bs-target="#modalNuevoTicket"><i class="fas fa-plus-circle me-2"></i>Nuevo
+                                        Ticket</a> </li>
+                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                        data-bs-target="#modalMetricasUsuario"><i
+                                            class="fas fa-chart-pie me-2"></i>Métricas y Auditoría</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a>
+                                </li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Cerrar
+                                        Sesión</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
+                <!-- TERMINA FIX PARA POSICIONAR BIEN EL NAV-->
             </div>
         </nav>
 

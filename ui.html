@@ -463,8 +463,8 @@
                 tbody.innerHTML = tickets.map(t => `
                     <tr onclick="Handlers.handleTicketRowClick('${t.ticketInterno}')" style="cursor: pointer;">
                         <td>${t.ticketInterno}</td>
-                        <td>${t.pedido}</td>
-                        <td>${t.planilla}</td>
+                        <td class="truncate-text" title="${t.pedido}">${t.pedido}</td>
+                        <td class="truncate-text" title="${t.planilla}">${t.planilla}</td>
                         <td><span class="badge bg-secondary">${t.creadoPor}</span></td>
                         <td><span class="badge ${this.getBadgeClassForStatus(t.estado)}">${t.estado || 'N/A'}</span></td>
                         <td><span class="badge ${this.getBadgeClassForPriority(t.prioridad)}">${t.prioridad || 'Normal'}</span></td>
@@ -601,8 +601,8 @@
             tbody.innerHTML = tickets.map(t => `
         <tr onclick="Handlers.handleTicketRowClick('${t.ticketInterno}')" style="cursor:pointer;">
             <td>${t.ticketInterno}</td>
-            <td>${t.pedido}</td>
-            <td>${t.planilla}</td>
+            <td class="truncate-text" title="${t.pedido}">${t.pedido}</td>
+            <td class="truncate-text" title="${t.planilla}">${t.planilla}</td>
             <td><span class="badge bg-secondary">${t.creadoPor}</span></td>
             <td><span class="badge ${this.getBadgeClassForStatus(t.estado)}">${t.estado}</span></td>
             <td>${t.timestamp.toLocaleDateString()}</td>
@@ -640,8 +640,8 @@
                 tbody.innerHTML = paginatedTickets.map(t => `
                     <tr>
                         <td><a href="#" onclick="Handlers.handleTicketRowClick('${t.ticketInterno}'); return false;">${t.ticketInterno}</a></td>
-                        <td>${t.pedido}</td>
-                        <td>${t.planilla}</td>
+                        <td class="truncate-text" title="${t.pedido}">${t.pedido}</td>
+                        <td class="truncate-text" title="${t.planilla}">${t.planilla}</td>
                         <td><span class="badge bg-secondary">${t.creadoPor}</span></td>
                         <td>
                             <select class="form-select form-select-sm" onchange="Handlers.handleQuickManageUpdate('${t.ticketInterno}', 'status', this.value)">
