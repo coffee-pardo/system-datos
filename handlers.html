@@ -7,6 +7,17 @@
      * @description El objeto 'Handlers' contiene las funciones que se ejecutan en respuesta a eventos del usuario.
      */
     const Handlers = {
+
+        /**
+        * 🆕 Maneja el cambio en el switch "Mis Tickets".
+        * @param {Event} event - El objeto del evento de cambio.
+        */
+        handleMyTicketsFilterChange(event) {
+            state.isMyTicketsFilterActive = event.target.checked;
+            state.pagination.currentPage = 1; // Resetear paginación al cambiar el filtro
+            App.refreshData(); // Recargar datos con el nuevo filtro
+        },
+
         // IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         handleBotQuery() {
             const input = document.getElementById('chat-input');

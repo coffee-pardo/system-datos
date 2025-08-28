@@ -1185,6 +1185,18 @@
         },
 
         /**
+        * 🆕 Actualiza el estado visual del switch "Mis Tickets" y guarda en localStorage.
+        * @param {boolean} isActive - True si el filtro está activo, false en caso contrario.
+        */
+        updateMyTicketsSwitch(isActive) {
+            const myTicketsSwitch = document.getElementById('myTicketsSwitch');
+            if (myTicketsSwitch) {
+                myTicketsSwitch.checked = isActive;
+                localStorage.setItem('myTicketsFilter', isActive);
+            }
+        },
+
+        /**
          * 🔧 FUNCIÓN CORREGIDA: Manejador de errores que usa el sistema de loading
          * @param {Error} error - El objeto de error.
          */

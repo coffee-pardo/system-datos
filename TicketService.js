@@ -62,9 +62,16 @@ function getDashboardDataLogic(options = {}) {  // LÓGICA DE PERMISOS
             end.setHours(23, 59, 59, 999);
             filteredTickets = filteredTickets.filter(t => new Date(t['Timestamp']) <= end);
         }
+        // NUEVO: Lógica para filtrar por "Mis Tickets" o mostrar todos
+        let allTicketsForUser = filteredTickets;
+        if (options.filterMyTickets) {
+            allTicketsForUser = filteredTickets.filter(t => t['Creado Por'] === userProfile.email);
+        }
+        // FIN NUEVO: Lógica para filtrar por "Mis Tickets"
+
         // fix global condición TODOS (CONDICIONAL TICKETS GLOBAL USUARIOS FINALES)
         //let allTicketsForUser = (userProfile.role === 'USER') ? filteredTickets.filter(t => t['Creado Por'] === userProfile.email) : filteredTickets; (CONDICIONAL TICKETS GLOBAL USUARIOS FINALES)
-        let allTicketsForUser = filteredTickets; // Ahora todos los usuarios ven todos los tickets filtrados
+        //let allTicketsForUser = filteredTickets; // Ahora todos los usuarios ven todos los tickets filtrados
         // TERMINA  fix global condición TODOS (CONDICIONAL TICKETS GLOBAL USUARIOS FINALES)
         allTicketsForUser.sort((a, b) => new Date(b['Timestamp']) - new Date(a['Timestamp']));
         const totalFilteredTickets = allTicketsForUser.length;

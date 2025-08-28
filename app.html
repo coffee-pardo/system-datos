@@ -20,6 +20,13 @@
                 selector: "[data-bs-toggle='tooltip']"
             });
 
+            const myTicketsSwitch = document.getElementById('myTicketsSwitch');
+            if (myTicketsSwitch) {
+                const storedValue = localStorage.getItem('myTicketsFilter');
+                state.isMyTicketsFilterActive = storedValue !== null ? storedValue === 'true' : true; // CAMBIAR ESTADO DE SWICHT (FILTRO SOLO YO)
+                myTicketsSwitch.checked = state.isMyTicketsFilterActive;
+            }
+
             try {
                 API.runServerFunction('getUserProfile', null, this.onProfileLoaded.bind(this), UI.handleError);
             } catch (error) {
@@ -216,6 +223,7 @@
                 startDate: state.filters.startDate,
                 endDate: state.filters.endDate,
                 filterPriority: state.filters.priority,
+                filterMyTickets: state.isMyTicketsFilterActive, // NUEVO: Añadir el estado del filtro
                 ...options
             };
             API.runServerFunction('getDashboardData', currentOptions, this.onDataLoaded.bind(this), UI.handleError);
@@ -336,6 +344,8 @@
             document.getElementById('search-input')?.addEventListener('input', Handlers.handleSearch);
             document.getElementById('escalamientoForm')?.addEventListener('submit', Handlers.handleTicketSubmit);
             document.getElementById('export-to-excel-btn')?.addEventListener('click', Handlers.handleExport);
+            // NUEVO: Event listener para el switch de "Mis Tickets"
+            document.getElementById('myTicketsSwitch')?.addEventListener('change', Handlers.handleMyTicketsFilterChange);
 
             ['modalNuevoTicket', 'modalDetalleTicket', 'modalReporte'].forEach(id => {
                 document.getElementById(id)?.addEventListener('show.bs.modal', Handlers.handleModalOpen);
